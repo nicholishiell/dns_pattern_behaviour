@@ -79,7 +79,7 @@ int main(int argc, char **argv){
     
     if(robotsBehind and !robotsAhead){
       heading = ScalarMultiplyVector(-1., formationNormalVector)->GetAngle();
-      linearVel = dot;
+      linearVel = fabs(dot);
     }
     else{
       heading = targetBearingVector->GetPerp()->GetAngle();
@@ -90,6 +90,7 @@ int main(int argc, char **argv){
     //if( heading > 170.) heading = 170.;
     //if( heading <-170.) heading = -170.;
     //printf("%f\t%f\n", heading, linearVel);
+
     if(linearVel < 0.05) linearVel = 0.;
     else linearVel = 1.;
     headingMsg.data = heading*180./M_PI;
