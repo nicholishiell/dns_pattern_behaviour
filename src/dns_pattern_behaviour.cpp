@@ -85,20 +85,23 @@ int main(int argc, char **argv){
       heading = targetBearingVector->GetPerp()->GetAngle();
       linearVel = dot;
     }
+
+    if(linearVel < 0.01) linearVel = 0.;
+    else linearVel = 1.;
+
+    heading = heading * 180. / M_PI;
     
     // deal with issues arising from driving "south"
-    //if( heading > 170.) heading = 170.;
-    //if( heading <-170.) heading = -170.;
+    if( heading > 170.) heading = 170.;
+    if( heading <-170.) heading = -170.;   
     //printf("%f\t%f\n", heading, linearVel);
-
-    if(linearVel < 0.05) linearVel = 0.;
-    else linearVel = 1.;
-    headingMsg.data = heading*180./M_PI;
+   
+    headingMsg.data = heading;
     linearVelMsg.data = linearVel;
-
-    //printf("RobotAhead: %d\tRobotBehind: %d\n", robotsAhead, robotsBehind);
-    //printf("Target Bearing: %f\n", targetBearingVector->GetAngle());
-    //printf("Command Vel: %f %f\n", heading, linearVel);
+    
+    printf("RobotAhead: %d\tRobotBehind: %d\n", robotsAhead, robotsBehind);
+    printf("Target Bearing: %f\n", targetBearingVector->GetAngle()*180./M_PI);
+    printf("Command Vel: %f %f\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", heading, linearVel);
     //getchar();
     
     heading_pub.publish(headingMsg);
