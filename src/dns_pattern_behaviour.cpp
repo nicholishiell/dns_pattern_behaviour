@@ -115,16 +115,9 @@ int main(int argc, char **argv){
       targetHeading = formationNormalVector->GetPerp()->GetAngle();
       targetLinearVel = 0.;
     }
-    
-    //if( fabs(targetLinearVel) < 0.01) targetLinearVel = 0.;
-    //else {
-    //  if(targetLinearVel > 0.) targetLinearVel = 1.;
-    //  else targetLinearVel = -1.;
-    //}
 
-    //if(targetLinearVel > 0.) targetLinearVel = 1.;
-    //else if(targetLinearVel < 0.) targetLinearVel = -1.;
-    //else targetLinearVel = 0.;
+    if( fabs(targetLinearVel) < 0.05) targetLinearVel = 0.;
+
     
     // Change to degrees
     targetHeading = targetHeading * 180. / M_PI;
