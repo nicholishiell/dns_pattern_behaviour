@@ -105,7 +105,7 @@ int main(int argc, char **argv){
     
     if(robotsBehind and !robotsAhead){
       targetHeading = formationNormalVector->GetAngle();
-      targetLinearVel = dot;
+      targetLinearVel = 0.5*dot;
     }
     else if(robotsAhead){
       targetHeading = targetBearingVector->GetPerp()->GetAngle();
@@ -116,7 +116,7 @@ int main(int argc, char **argv){
       targetLinearVel = 0.;
     }
 
-    if( fabs(targetLinearVel) < 0.05) targetLinearVel = 0.;
+    if( fabs(targetLinearVel) < 0.09) targetLinearVel = 0.;
 
     
     // Change to degrees
