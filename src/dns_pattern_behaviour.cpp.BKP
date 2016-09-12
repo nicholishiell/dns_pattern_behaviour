@@ -3,7 +3,6 @@
 #include "geometry_msgs/Twist.h"
 #include "bupimo_msgs/Blob.h"
 #include "bupimo_msgs/BlobArray.h"
-#include "bupimo_msgs/VelocityCommand.h"
 
 #include "Vector2d.h"
 
@@ -76,7 +75,8 @@ int main(int argc, char **argv){
 
   ros::NodeHandle n;
  
-  ros::Publisher command_pub = n.advertise<bupimo_msgs::VelocityCommand>("patternFormationBehaviour", 1000);
+  //ros::Publisher twist_pub = n.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+  ros::Publisher twist_pub = n.advertise<bupimo_msgs::VelocityCommand>("patternFormationBehaviour", 1000);
 
   ros::Subscriber blobBearing_Sub = n.subscribe("blobsGlobal", 1000, BlobBearingsCallback);  
   ros::Subscriber currentHeading_Sub = n.subscribe("currentHeading", 1000, CurrentHeadingCallback);
@@ -84,7 +84,9 @@ int main(int argc, char **argv){
   
   ros::Rate loop_rate(10);
 
-  while (ros::ok()){
+  bool keepGoing = true;
+  
+  while (ros::ok() and keepGoing){
 
     if(!firstBlobs){
       printf("Waiting for first blob...\n");
@@ -92,6 +94,8 @@ int main(int argc, char **argv){
       loop_rate.sleep();
       continue;
     }
+    //std_msgs::Float64 headingMsg;
+    //std_msgs::Float64 linearVelMsg;
 
     float targetHeading;
     float targetLinearVel;
@@ -101,7 +105,7 @@ int main(int argc, char **argv){
     
     if(robotsBehind and !robotsAhead){
       targetHeading = formationNormalVector->GetAngle();
-      targetLinearVel = dot;
+      targetLinearVel = 0.5*dot;
     }
     else if(robotsAhead){
       targetHeading = targetBearingVector->GetPerp()->GetAngle();
@@ -117,24 +121,40 @@ int main(int argc, char **argv){
     
     // Change to degrees
     targetHeading = targetHeading * 180. / M_PI;
+    
+    geometry_msgs::Twist msg;
 
-    // Now publish the velocity command
-    bupimo_msgs::VelocityCommand msg;
+    // Use a proportional controller to determine v and w
+    float headingError = -1.*(targetHeading - currentHeading) ;
+      
+    if(fabs(headingError) > 180.){
+      headingError = 180. - headingError;
+    }
+    
+    // Now convert to radians (per second)
+    headingError = headingError * M_PI/180.;
+    
+    // set values of twist msg.
+    msg.linear.x = 0.075*targetLinearVel;
+    msg.angular.z = 2.*headingError;
+    msg.angular.y = -1.;
 
-    msg.bearing = targetHeading;
-    msg.linearSpeed = targetLinearVel;
-
-    command_pub.publish(msg);
+    // Need to remove excess digits for transmission over serial.
+    msg.linear.x = roundf(msg.linear.x * 100.) / 100.;
+    msg.angular.z = roundf(msg.angular.z * 100.) / 100.; 
+    
+    // publish twist msg.
+    twist_pub.publish(msg);
   
-    /*printf("RobotAhead: %d\tRobotBehind: %d\n", robotsAhead, robotsBehind);
+    printf("RobotAhead: %d\tRobotBehind: %d\n", robotsAhead, robotsBehind);
     printf("Bearing to Target: %f\n", targetBearingVector->GetAngle()*180./M_PI);
     printf("Target Vel: %f (%f)\n", targetLinearVel, currentLinearVel);
     printf("Target Heading: %f (%f)\n", targetHeading, currentHeading);
     printf("Dot: %f\n", dot);
     printf("Msg: %f\t%f\n", msg.linear.x, msg.angular.z);
-    printf("%f\t%f\t%f\n", dot, msg.linear.x, msg.angular.z);
+    //printf("%f\t%f\t%f\n", dot, msg.linear.x, msg.angular.z);
     printf("~~~~~~~~~~~~~~~~~~~~~~~\n");
-    getchar();*/
+    //getchar();
     
     ros::spinOnce();
 
